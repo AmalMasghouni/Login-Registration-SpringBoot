@@ -1,13 +1,25 @@
 package com.backend.stage.iliade.contollers;
 
 import com.backend.stage.iliade.models.User;
+import com.backend.stage.iliade.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.beans.factory.annotation.Autowired;
 
-@Controller
+import javax.validation.Valid;
+
+@RestController
 public class AuthentificationController {
+
+           @Autowired
+    UserService userService;
 
     @RequestMapping(value = { "/login" }, method = RequestMethod.GET)
     public ModelAndView login() {
@@ -20,7 +32,7 @@ public class AuthentificationController {
     public ModelAndView register() {
         ModelAndView modelAndView = new ModelAndView();
         User user = new User();
-         modelAndView.addObject("user", user);
+        modelAndView.addObject("user", user);
         modelAndView.setViewName("register"); // resources/template/register.html
         return modelAndView;
     }
@@ -29,6 +41,34 @@ public class AuthentificationController {
     public ModelAndView home() {
         ModelAndView modelAndView = new ModelAndView();
         modelAndView.setViewName("home"); // resources/template/home.html
+        return modelAndView;
+    }
+
+    @RequestMapping(value = "/admin", method = RequestMethod.GET)
+    public ModelAndView adminHome() {
+        ModelAndView modelAndView = new ModelAndView();
+        modelAndView.setViewName("admin"); // resources/template/admin.html
+        return modelAndView;
+    }
+
+    @RequestMapping(value="/register", method=RequestMethod.POST)
+    public ModelAndView registerUser(@Valid User user, BindingResult bindingResult, ModelMap modelMap) {
+        ModelAndView modelAndView = new ModelAndView();
+        // Check for the validations
+        if(bindingResult.hasErrors()) {
+            modelAndView.addObject("successMessage", "Please correct the errors in form!");
+            modelMap.addAttribute("bindingResult", bindingResult);
+        }
+        else if(userService.UserIsAlreadySaved(user)){
+            modelAndView.addObject("successMessage", "user already exists!");
+        }
+        // we will save the user if, no binding errors
+        else {
+            userService.SavedUser(user);
+            modelAndView.addObject("successMessage", "User is registered successfully!");
+        }
+        modelAndView.addObject("user", new User());
+        modelAndView.setViewName("register");
         return modelAndView;
     }
 }
